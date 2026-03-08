@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PriceValue } from '@/components/price-value';
 
 const SERVERS = {
   deporozu: { key: 'deporozu', label: '데포로쥬' },
@@ -91,7 +92,7 @@ export default async function Page({
         <CardHeader>
           <CardTitle className="text-sm text-muted-foreground">현재값</CardTitle>
           <CardDescription className="text-5xl font-bold text-foreground">
-            {latest ? `${latest.toLocaleString()}원` : '-'}
+            <PriceValue value={latest} />
           </CardDescription>
           <p className="text-xs text-muted-foreground">업데이트: {updated ? updated.replace('T', ' ') : '-'}</p>
         </CardHeader>
