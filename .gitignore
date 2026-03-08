@@ -1,0 +1,6 @@
+node_modules
+.next
+collector.log
+web.log
+data/*.json
+docs/data/*.json

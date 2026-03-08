@@ -1,28 +1,30 @@
-# Lineage Classic Deporozu price tracker
+# Lineage Classic Price Tracker (Next.js Server Components)
 
-- 기준 단위: **1만 아덴당 KRW**
+- 단위: **1만 아덴당 KRW**
 - 수집 주기: **5분** (launchd)
-- 정제: **상/하위 5% 제거(Trimmed)**
+- 단일값 로직: **상/하위 5% 제거 후 최저값**
+- 서버 탭: **데포로쥬 / 조우**
 
-## 파일
-- `collect.js` : 수집기
-- `data/history.json` : 원본 누적
-- `docs/index.html` : 그래프 페이지
-- `docs/data/history.json` : GitHub Pages용 데이터
+## 보안/노출 정책
+- 원시 데이터는 `data/*.json` (서버 파일) 에만 저장
+- `public/`에 데이터 파일을 두지 않음
+- 클라이언트에는 화면에 필요한 값만 SSR로 렌더링
 
-## 로컬 실행
+## 실행
+```bash
+npm install
+npm run dev
+# http://localhost:3311
+```
+
+## 수집기
 ```bash
 node collect.js
 ```
 
-## 에이전트(5분 주기)
-LaunchAgent label: `com.minibot.lineage-price-tracker`
+## 자동수집 에이전트
+Label: `com.minibot.lineage-price-tracker`
 
 ```bash
 launchctl print gui/$(id -u)/com.minibot.lineage-price-tracker
 ```
-
-## GitHub Pages 호스팅
-1. 이 폴더를 GitHub repo로 push
-2. Settings → Pages → Branch: `main` / Folder: `/lineage-price-tracker/docs` (또는 repo root면 `/docs`)
-3. 접속 URL에서 그래프 확인
