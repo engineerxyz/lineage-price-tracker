@@ -2,7 +2,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const ITEMMANIA_URL = 'https://www.itemmania.com/sell/list_search.html?search_game=5913&search_server=24188';
 const ITEMBAY_URL = 'https://www.itembay.com/item/sell/game-3828/server-15943/type-3';
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -12,51 +11,8 @@ const DOCS_DATA_DIR = path.join(__dirname, 'docs', 'data');
 const DOCS_HISTORY_PATH = path.join(DOCS_DATA_DIR, 'history.json');
 const DOCS_LATEST_PATH = path.join(DOCS_DATA_DIR, 'latest.json');
 
-function quantile(sorted, q) {
-  if (!sorted.length) return null;
-  const pos = (sorted.length - 1) * q;
-  const lo = Math.floor(pos);
-  const hi = Math.ceil(pos);
-  if (lo === hi) return sorted[lo];
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
-}
-
-function statsFrom(values, trim = 0.05) {
-  const sorted = [...values].sort((a, b) => a - b);
-  if (!sorted.length) return null;
-  const cut = Math.floor(sorted.length * trim);
-  const trimmed = sorted.slice(cut, sorted.length - cut);
-  const avg = trimmed.reduce((s, v) => s + v, 0) / trimmed.length;
-  return {
-    n: sorted.length,
-    cut,
-    min: sorted[0],
-    max: sorted[sorted.length - 1],
-    median: quantile(trimmed, 0.5),
-    trimmedMean: avg,
-    q1: quantile(trimmed, 0.25),
-    q3: quantile(trimmed, 0.75),
-    p10: quantile(trimmed, 0.10),
-    p90: quantile(trimmed, 0.90),
-  };
-}
-
-function extractItemmania(html) {
-  const values10k = [];
-  const re = /10만당\s*([\d,]+)원/g;
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    const v = Number(m[1].replace(/,/g, ''));
-    if (!Number.isFinite(v)) continue;
-    if (v < 30000 || v > 100000) continue; // filter non-aden rows/outliers
-    values10k.push(v / 10); // convert to 1만당
-  }
-  return values10k;
-}
-
 function extractItembay(html) {
   const values10k = [];
-  // Keep only chunks near money-unit rows likely to be aden/game-money.
   const rowLike = html.split(/<tr[\s>]/i).map((x) => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' '));
   for (const row of rowLike) {
     if (!/데포로쥬/.test(row)) continue;
@@ -71,22 +27,35 @@ function extractItembay(html) {
   return values10k;
 }
 
-async function main() {
-  const [r1, r2] = await Promise.all([
-    fetch(ITEMMANIA_URL, { headers: { 'user-agent': 'Mozilla/5.0' } }),
-    fetch(ITEMBAY_URL, { headers: { 'user-agent': 'Mozilla/5.0' } }),
-  ]);
+function computeSingleValue(values, trim = 0.05) {
+  const sorted = [...values].sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const cut = Math.floor(sorted.length * trim);
+  const trimmed = sorted.slice(cut, sorted.length - cut);
+  if (!trimmed.length) return null;
 
-  const [h1, h2] = await Promise.all([r1.text(), r2.text()]);
-  const im = extractItemmania(h1);
-  const ib = extractItembay(h2);
+  // User-selected logic: after removing top/bottom 5%, use the lowest remaining value as the single tracked value.
+  return {
+    value: trimmed[0],
+    n: sorted.length,
+    cut,
+  };
+}
+
+async function main() {
+  const r = await fetch(ITEMBAY_URL, { headers: { 'user-agent': 'Mozilla/5.0' } });
+  const html = await r.text();
+  const values = extractItembay(html);
+  const picked = computeSingleValue(values);
+
+  if (!picked) throw new Error('No valid prices parsed from ItemBay page.');
 
   const point = {
     ts: new Date().toISOString(),
     kst: new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).replace(' ', 'T'),
     unit: 'KRW per 10k Adena',
-    itemmania: statsFrom(im),
-    itembay: statsFrom(ib),
+    value: picked.value,
+    source: 'itembay_deporoju',
   };
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -104,7 +73,7 @@ async function main() {
   fs.writeFileSync(DOCS_HISTORY_PATH, JSON.stringify(history, null, 2));
   fs.writeFileSync(DOCS_LATEST_PATH, JSON.stringify(point, null, 2));
 
-  console.log(`[ok] ${point.kst} IM=${point.itemmania?.median ?? 'NA'} IB=${point.itembay?.median ?? 'NA'}`);
+  console.log(`[ok] ${point.kst} value=${point.value}`);
 }
 
 main().catch((e) => {

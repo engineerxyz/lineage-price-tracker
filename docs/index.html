@@ -3,36 +3,57 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>데포로쥬 아덴 시세 추이</title>
+  <title>데포로쥬 아덴 단일 지표</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:980px;margin:24px auto;padding:0 12px} .muted{color:#666}</style>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:980px;margin:24px auto;padding:0 12px}
+    .muted{color:#666}
+    .big{font-size:42px;font-weight:700;margin:6px 0}
+  </style>
 </head>
 <body>
   <h2>리니지클래식 데포로쥬 아덴 시세 (1만 아덴당, KRW)</h2>
-  <p class="muted">상/하위 5% 제거 기준(Trimmed). 5분 간격 수집.</p>
+  <p class="muted">단일값 로직: 상/하위 5% 제거 후 최저값. 5분 간격 수집.</p>
+
+  <div id="latest" class="big">-</div>
+  <div id="updated" class="muted"></div>
+
   <canvas id="c" height="120"></canvas>
-  <pre id="summary"></pre>
+
   <script>
+    function pickValue(row){
+      if (typeof row?.value === 'number') return row.value;
+      // legacy rows fallback
+      if (typeof row?.itembay?.p10 === 'number') return Math.round(row.itembay.p10);
+      if (typeof row?.itembay?.median === 'number') return Math.round(row.itembay.median);
+      return null;
+    }
+
     async function run(){
       const res = await fetch('./data/history.json');
       const rows = await res.json();
-      const labels = rows.map(r => (r.kst||r.ts).replace('T',' ').slice(5,16));
-      const ibMedian = rows.map(r => r.itembay?.median ?? null);
-      const ibMean = rows.map(r => r.itembay?.trimmedMean ? Math.round(r.itembay.trimmedMean) : null);
-      const imMedian = rows.map(r => r.itemmania?.median ?? null);
+
+      const normalized = rows
+        .map(r => ({ t: r.kst || r.ts, v: pickValue(r) }))
+        .filter(x => typeof x.v === 'number');
+
+      const labels = normalized.map(r => String(r.t).replace('T',' ').slice(5,16));
+      const values = normalized.map(r => r.v);
+
+      const last = normalized[normalized.length - 1];
+      if (last) {
+        document.getElementById('latest').textContent = `${last.v.toLocaleString()}원`;
+        document.getElementById('updated').textContent = `마지막 업데이트: ${String(last.t).replace('T',' ')}`;
+      }
 
       new Chart(document.getElementById('c'), {
         type:'line',
-        data:{labels,datasets:[
-          {label:'ItemBay 중앙값',data:ibMedian,borderColor:'#1f77b4',tension:.2,spanGaps:true},
-          {label:'ItemBay 절사평균',data:ibMean,borderColor:'#2ca02c',tension:.2,spanGaps:true},
-          {label:'ItemMania 중앙값(수집가능시)',data:imMedian,borderColor:'#ff7f0e',tension:.2,spanGaps:true}
-        ]},
+        data:{
+          labels,
+          datasets:[{label:'단일 지표',data:values,borderColor:'#1f77b4',backgroundColor:'#1f77b4',tension:.15,pointRadius:2,spanGaps:true}]
+        },
         options:{responsive:true,scales:{y:{title:{display:true,text:'원 / 1만 아덴'}}}}
       });
-
-      const last = rows[rows.length-1];
-      document.getElementById('summary').textContent = JSON.stringify(last, null, 2);
     }
     run();
   </script>
