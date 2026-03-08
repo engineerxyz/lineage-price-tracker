@@ -1,4 +1,4 @@
 1:"$Sreact.fragment"
 2:I[45723,["/lineage-price-tracker/_next/static/chunks/7689f77341a1513c.js"],"default"]
 3:I[65839,["/lineage-price-tracker/_next/static/chunks/7689f77341a1513c.js"],"default"]
-0:{"buildId":"_dm7E3y2Bw5zgOXv54QYd","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"tp2CgF7abaHk-iJa-gD6P","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
