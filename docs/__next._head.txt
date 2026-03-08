@@ -2,4 +2,4 @@
 2:I[64589,["/lineage-price-tracker/_next/static/chunks/7689f77341a1513c.js"],"ViewportBoundary"]
 3:I[64589,["/lineage-price-tracker/_next/static/chunks/7689f77341a1513c.js"],"MetadataBoundary"]
 4:"$Sreact.suspense"
-0:{"buildId":"L1yaNTGSfhBjwbaklP67s","rsc":["$","$1","h",{"children":[null,["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"7q7Arc6D0b8eI-44u6J_2","rsc":["$","$1","h",{"children":[null,["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
